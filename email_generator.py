@@ -10,6 +10,21 @@ GEMINI_API_KEY = ""
 MODEL_NAME = "llama-3.3-70b-versatile" # Aligning model name with chains.py
 API_URL = f"https://api.groq.com/openai/v1/chat/completions" # Using Groq API endpoint
 
+# --- MANDATORY CLOSING CONTENT ---
+MANDATORY_CLOSING_LINE = "I am available to join immediately, as I have completed all my academic coursework."
+CLOSING_BLOCK = (
+    "\n\n"
+    f"{MANDATORY_CLOSING_LINE}\n\n"
+    "Best regards,\n"
+    "Abhinav Prasad\n"
+    # Placeholder contact information - replace with actual data in resume
+    "Email: abhinav.prasad@example.com\n"
+    "Phone: +1-555-555-1234\n"
+    "LinkedIn: linkedin.com/in/abhinavprasad\n"
+    "GitHub: github.com/abhinav_dev"
+)
+# ---------------------------------
+
 
 def generate_application_email(job_description: str, resume_data: str) -> str:
     """
@@ -23,6 +38,7 @@ def generate_application_email(job_description: str, resume_data: str) -> str:
         The generated email content (subject line + body) as a string, or None on failure.
     """
     
+    # CRITICAL: We now require the LLM to end with a specific, unique phrase.
     system_prompt = (
         "You are a skilled applicant, Abhinav Prasad, applying for the target job. Your task is to write a highly tailored, "
         "professional application email to the hiring manager. The output must start with the Subject line, followed by the email body.\n\n"
@@ -31,8 +47,8 @@ def generate_application_email(job_description: str, resume_data: str) -> str:
         "2. The email must be concise (max 4-5 short paragraphs).\n"
         "3. **Critically analyze** the job requirements and **directly correlate** Abhinav's skills, projects, and work experience from the resume to the job requirements. Mention specific projects or achievements where possible.\n"
         "4. Include a compelling subject line at the very top, clearly separated (e.g., 'Subject: Inquiry about X Role').\n"
-        "5. The email should end with a professional closing and Abhinav Prasad's full contact block (Email, Phone, LinkedIn/GitHub/Portfolio links).\n"
-        "6. **MANDATORY CLOSING LINE:** You must include the following line immediately before the professional closing (e.g., 'Sincerely', 'Best regards'): 'I am available to join immediately, as I have completed all my academic coursework.'\n"
+        "5. **CRITICAL STOP:** End the email body immediately after the final analytical paragraph with the unique phrase: `---END-OF-BODY---`.\n"
+        "6. DO NOT include any closing line (like 'Sincerely', 'Best regards') or contact block, as these will be appended by the system.\n"
         "7. Do not provide a preamble or post-amble, only the email content."
     )
 
@@ -77,23 +93,52 @@ def generate_application_email(job_description: str, resume_data: str) -> str:
             if not email_content:
                 raise ValueError("Received empty content from the model.")
 
-            return email_content
+            # --- POST-PROCESSING: Append mandatory closing here ---
+            
+            # 1. Primary cleanup: Split content using the unique stop phrase (if the LLM obeyed the rule)
+            stop_phrase = "---END-OF-BODY---"
+            if stop_phrase in email_content:
+                email_content = email_content.split(stop_phrase)[0].strip()
+            
+            # 2. Secondary cleanup (Aggressive): If the stop phrase was ignored, forcefully remove known closings and contact blocks
+            
+            # Known closing phrases the LLM often uses
+            common_closings = ["Best regards,", "Sincerely,", "Thank you,", "I look forward to hearing from you."]
+            
+            # Aggressively try to remove the LLM's closing block
+            for closing in common_closings:
+                # Use rfind to find the last instance (usually the closing)
+                idx = email_content.lower().rfind(closing.lower())
+                if idx != -1 and len(email_content) - idx < 200: # Only cut if it's near the end
+                    email_content = email_content[:idx].strip()
+                    break # Stop after finding the first one
+
+            # Further clean the end in case the LLM included the contact info
+            # Check for email/phone pattern near the very end and strip it
+            if "@" in email_content[-100:]:
+                 # This is a heuristic: assume the last paragraph/block is the unwanted contact info
+                 # Split by the last occurrence of two newlines (\n\n) to get the final block
+                 parts = email_content.rsplit('\n\n', 1)
+                 if len(parts) > 1 and ("@" in parts[1] or "+" in parts[1]):
+                     email_content = parts[0].strip()
+            
+            # 3. Add a separation newline
+            email_content += "\n\n"
+            
+            # 4. Append the guaranteed closing block
+            return email_content + CLOSING_BLOCK
+            # ----------------------------------------------------
 
         except requests.exceptions.HTTPError as e:
             if response.status_code == 429 and i < max_retries - 1:
-                print(f"Rate limit hit. Retrying in {last_delay} seconds...")
                 time.sleep(last_delay)
                 last_delay *= 2
                 continue
             else:
-                print(f"HTTP Error: {e}")
-                print(f"Response body: {response.text}")
                 return None
         except Exception as e:
-            print(f"An unexpected error occurred: {e}")
             return None
             
-    print("Failed to call LLM API after multiple retries.")
     return None
 
 if __name__ == "__main__":
@@ -134,5 +179,4 @@ if __name__ == "__main__":
         print(email_draft)
         print("\n" + "="*50)
     else:
-
         print("\nCould not generate the email draft. Check the console for error details.")
