@@ -32,7 +32,8 @@ def generate_application_email(job_description: str, resume_data: str) -> str:
         "3. **Critically analyze** the job requirements and **directly correlate** Abhinav's skills, projects, and work experience from the resume to the job requirements. Mention specific projects or achievements where possible.\n"
         "4. Include a compelling subject line at the very top, clearly separated (e.g., 'Subject: Inquiry about X Role').\n"
         "5. The email should end with a professional closing and Abhinav Prasad's full contact block (Email, Phone, LinkedIn/GitHub/Portfolio links).\n"
-        "6. Do not provide a preamble or post-amble, only the email content."
+        "6. **MANDATORY CLOSING LINE:** You must include the following line immediately before the professional closing (e.g., 'Sincerely', 'Best regards'): 'I am available to join immediately, as I have completed all my academic coursework.'\n"
+        "7. Do not provide a preamble or post-amble, only the email content."
     )
 
     user_query = (
@@ -133,4 +134,5 @@ if __name__ == "__main__":
         print(email_draft)
         print("\n" + "="*50)
     else:
+
         print("\nCould not generate the email draft. Check the console for error details.")
