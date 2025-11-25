@@ -151,7 +151,7 @@ def create_streamlit_app(llm, clean_text):
     if 'generated_email_content' not in st.session_state:
         st.session_state.generated_email_content = None
     
-    st.title("📧 Personalized Application Email Automator")
+    st.title("📧 MailGenie - Personalized Application Email Automator")
     st.markdown("---")
 
     # =========================================================================
@@ -290,4 +290,5 @@ if __name__ == "__main__":
     st.set_page_config(layout="wide", page_title="AI Email Automator", page_icon="📧")
     
     # Run the application, passing only the chain and the utility function
+
     create_streamlit_app(chain, clean_text)
