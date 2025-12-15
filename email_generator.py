@@ -18,10 +18,10 @@ CLOSING_BLOCK = (
     "Best regards,\n"
     "Abhinav Prasad\n"
     # Placeholder contact information - replace with actual data in resume
-    "Email: abhinav.prasad@example.com\n"
-    "Phone: +1-555-555-1234\n"
-    "LinkedIn: linkedin.com/in/abhinavprasad\n"
-    "GitHub: github.com/abhinav_dev"
+    "Email: abhinavprasad2004ap@gmail.com\n"
+    "Phone: 8989625663\n"
+    "LinkedIn: https://www.linkedin.com/in/abhinav-prasad-0a894b251/\n"
+    "GitHub: https://github.com/Abhii242004"
 )
 # ---------------------------------
 
@@ -180,3 +180,4 @@ if __name__ == "__main__":
         print("\n" + "="*50)
     else:
         print("\nCould not generate the email draft. Check the console for error details.")
+
